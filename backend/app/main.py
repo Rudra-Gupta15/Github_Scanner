@@ -132,3 +132,41 @@ def chat(job_id: str, req: ChatRequest):
         yield "data: [DONE]\n\n"
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")
+
+@app.post("/api/jobs/{job_id}/review")
+def review(job_id: str, req: ChatRequest):
+    """SSE streaming endpoint for a full project architecture review."""
+    job = get_job(job_id)
+    if job is None:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    model = req.model or DEFAULT_CHAT_MODEL
+    repo_root = get_job_repo_root(job_id)
+    if repo_root is None:
+        raise HTTPException(status_code=404, detail="Job not found or repo no longer on disk")
+
+    tree = repo_walk.build_file_tree(repo_root)
+
+    def _flatten_tree(nodes, prefix=""):
+        lines = []
+        for n in nodes:
+            lines.append(f"{prefix}- {n['name']}")
+            if n.get("type") == "dir" and n.get("children"):
+                lines.extend(_flatten_tree(n["children"], prefix + "  "))
+        return lines
+
+    tree_text = "\n".join(_flatten_tree(tree))
+    
+    question = (
+        "You are an expert software architect. Below is the file tree of a project repository.\n"
+        "Please provide a comprehensive explanation of the project's architecture, folder by folder and file by file, "
+        "so that a new developer joining the team can easily understand how the project is structured and what each part does.\n\n"
+        f"File Tree:\n{tree_text}"
+    )
+
+    def event_stream():
+        for token in stream_chat(question, context="", model=model):
+            yield f"data: {json.dumps({'token': token})}\n\n"
+        yield "data: [DONE]\n\n"
+
+    return StreamingResponse(event_stream(), media_type="text/event-stream")

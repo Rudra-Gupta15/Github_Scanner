@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import IdeView from './IdeView';
+import ReviewView from './ReviewView';
 import './Report.css';
 
 const SEVERITY_META = {
@@ -108,6 +109,14 @@ export default function Report({ job, onReset, viewMode, onViewModeChange }) {
     return (
       <section className="report-full">
         <IdeView job={job} />
+      </section>
+    );
+  }
+
+  if (viewMode === 'review') {
+    return (
+      <section className="report-full">
+        <ReviewView job={job} />
       </section>
     );
   }

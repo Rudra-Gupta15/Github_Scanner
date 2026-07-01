@@ -81,7 +81,7 @@ export default function App() {
         setIsPaused={setIsPaused}
       />
 
-      <main className={`main ${(isDone && viewMode === 'code') || !jobId || (jobId && !isDone && !isFailed) ? 'main--full-bleed' : ''}`}>
+      <main className={`main ${(isDone && (viewMode === 'code' || viewMode === 'review')) || !jobId || (jobId && !isDone && !isFailed) ? 'main--full-bleed' : ''}`}>
         {!jobId && (
           <Hero onSubmit={startScan} error={submitError} />
         )}
@@ -152,6 +152,12 @@ function TopBar({ onReset, showReset, job, viewMode, onViewModeChange, isPaused,
               onClick={() => onViewModeChange('code')}
             >
               Code
+            </button>
+            <button
+              className={`view-toggle-btn ${viewMode === 'review' ? 'active' : ''}`}
+              onClick={() => onViewModeChange('review')}
+            >
+              Review
             </button>
           </div>
         )}
