@@ -1,0 +1,7 @@
+fastapi
+uvicorn[standard]
+gitpython
+pylint
+bandit
+requests
+python-multipart
